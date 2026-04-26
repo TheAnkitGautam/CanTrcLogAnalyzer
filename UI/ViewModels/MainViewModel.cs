@@ -31,7 +31,7 @@ public sealed class MainViewModel : ViewModelBase
     private string _serviceFilter = "All";
     private string _statusFilter = "All";
     private string _messageTypeFilter = "All";
-    private string _selectedTheme = "System";
+    private string _selectedTheme = "Dark";
     private int _selectedTabIndex;
     private IsoTpMessage? _selectedMessage;
     private UdsTransaction? _selectedIssueTransaction;
