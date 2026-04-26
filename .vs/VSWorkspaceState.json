@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Application",
+    "\\Application\\Services",
+    "\\Infrastructure",
+    "\\Infrastructure\\Channel",
+    "\\Infrastructure\\IsoTp",
+    "\\Infrastructure\\Parsers",
+    "\\UI",
+    "\\UI\\Services",
+    "\\UI\\ViewModels"
+  ],
+  "SelectedNode": "\\Infrastructure\\Channel\\EcuChannelResolver.cs",
+  "PreviewInSolutionExplorer": false
+}

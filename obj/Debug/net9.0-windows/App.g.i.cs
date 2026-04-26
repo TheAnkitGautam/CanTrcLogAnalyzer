@@ -52,7 +52,7 @@ namespace EvUdsAnalyzer {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/EvUdsAnalyzer;component/app.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/CanTrcLogAnalyzer;component/app.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\App.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
