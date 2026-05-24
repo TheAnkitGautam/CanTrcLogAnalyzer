@@ -1,13 +1,17 @@
 ﻿using EvUdsAnalyzer.Application.Interfaces;
 using EvUdsAnalyzer.Domain.Enums;
 using EvUdsAnalyzer.Domain.Models;
+using System.Runtime.Serialization;
 
 namespace EvUdsAnalyzer.Application.Services;
 
 public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : ITransactionMatcher
 {
-    private const double ResponseTimeoutMs = 1000.0;
+    private const double DefaultTimeoutMs = 1000.0;
+    private const double ExtendedTimeoutMs = 5000.0;
 
+    private readonly Dictionary<IsoTpMessage, double> _extendedDeadlines = new();
+    private readonly HashSet<IsoTpMessage> _completedRequests = new();
     public IReadOnlyList<UdsTransaction> Match(IReadOnlyList<IsoTpMessage> messages)
     {
         var transactions = new List<UdsTransaction>();
@@ -18,20 +22,7 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                      .OrderBy(m => m.StartTimeMs)
                      .ThenBy(m => m.StartLineNumber))
         {
-            // 🚫 Skip non-UDS (e.g., J1939 like 1CFFxxxx)
-            if (IsNonUds(message.CanIdValue))
-            {
-                message.Channel = channelResolver.ResolveForMessage(message);
-
-                transactions.Add(new UdsTransaction
-                {
-                    Channel = message.Channel,
-                    Response = message,
-                    Status = UdsTransactionStatus.UnmatchedResponse
-                });
-                continue;
-            }
-
+            // ISO-TP error
             if (message.Status != IsoTpMessageStatus.Complete)
             {
                 message.Channel = channelResolver.ResolveForMessage(message);
@@ -45,6 +36,7 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                 continue;
             }
 
+            // Request message
             if (IsRequest(message))
             {
                 message.Channel = channelResolver.ResolveForMessage(message);
@@ -53,9 +45,11 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                 continue;
             }
 
+            // response message
             var request = FindMatchingRequest(message, pending);
             message.Channel = channelResolver.ResolveForMessage(message, request);
 
+            // No matching request found
             if (request is null)
             {
                 transactions.Add(new UdsTransaction
@@ -67,8 +61,38 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                 continue;
             }
 
+            // Ignore responses after request is already completed (can happen with multiple responses or interleaved messages)
+            if (_completedRequests.Contains(request))
+            {
+                transactions.Add(new UdsTransaction
+                {
+                    Channel = message.Channel,
+                    Request = request,
+                    Response = message,
+                    Status = UdsTransactionStatus.UnmatchedResponse
+                });
+                continue;
+            }
+
+            // NRC 0x78 (Response Pending) extends the response deadline for the request
+            if (IsResponsePending(message))
+            {
+                _extendedDeadlines[request] = message.StartTimeMs + ExtendedTimeoutMs;
+                transactions.Add(new UdsTransaction
+                {
+                    Channel = message.Channel,
+                    Request = request,
+                    Response = message,
+                    Status = UdsTransactionStatus.NegativeResponse
+                });
+                // keep request pending for the next response
+                continue;
+            }
+            // final response
             request.Channel = channelResolver.ResolveForMessage(request);
             pending.Remove(request);
+            _extendedDeadlines.Remove(request);
+            _completedRequests.Add(request);
 
             transactions.Add(new UdsTransaction
             {
@@ -90,51 +114,42 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
     // ============================
     private static bool IsRequest(IsoTpMessage message)
     {
-        var id = message.CanIdValue;
+        var sid = message.Decoded?.ServiceId;
 
-        if (IsNonUds(id))
-            return false;
-
-        // 11-bit
-        if (!IsExtended(id))
-        {
-            if (id == 0x7DF || (id >= 0x7E0 && id <= 0x7E7))
-                return true;
-
-            if (id >= 0x7E8 && id <= 0x7EF)
-                return false;
-        }
-        else
-        {
-            if (IsFunctional(id))
-                return true;
-
-            // fallback (robust for unknown tester IDs)
+        if (sid == null)
             return !message.IsRx;
-        }
 
-        return !message.IsRx;
+        return sid < 0x40;
+    }
+
+    // ============================
+    // NRC 0x78 Detection
+    // ============================
+    private static bool IsResponsePending(IsoTpMessage message)
+    {
+        return message.Decoded?.IsNegativeResponse == true &&
+               message.Decoded?.ServiceId == 0x78;
     }
 
     // ============================
     // 🔍 Matching Logic
     // ============================
-    private static IsoTpMessage? FindMatchingRequest(IsoTpMessage response, List<IsoTpMessage> pending)
+    private IsoTpMessage? FindMatchingRequest(IsoTpMessage response, List<IsoTpMessage> pending)
     {
         var responseOriginalSid = response.Decoded?.OriginalServiceId;
 
         return pending
-            .Where(request => request.Bus == response.Bus)
-            .Where(request => response.StartTimeMs >= request.StartTimeMs &&
-                              response.StartTimeMs - request.StartTimeMs <= ResponseTimeoutMs)
-            .Where(request =>
-                IsPhysicalPair(request.CanIdValue, response.CanIdValue) ||
-                IsFunctional(request.CanIdValue))
-            .Where(request =>
+             .Where(req => !_completedRequests.Contains(req))
+             .Where(req => req.Bus == response.Bus)
+             .Where(req =>
+                        response.StartTimeMs >= req.StartTimeMs &&
+                        response.StartTimeMs - req.StartTimeMs <= 10000)
+             .Where(req => IsPhysicalPair(req.CanIdValue, response.CanIdValue))
+             .Where(req =>
                 responseOriginalSid is null ||
-                request.Decoded?.ServiceId == responseOriginalSid)
-            .OrderByDescending(request => request.StartTimeMs)
-            .FirstOrDefault();
+                req.Decoded?.ServiceId == responseOriginalSid)
+             .OrderBy(req => req.StartTimeMs)
+             .FirstOrDefault();
     }
 
     // ============================
@@ -149,19 +164,14 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                    responseId == requestId + 8;
         }
 
-        // 29-bit UDS (address swap logic)
-        if (IsUds29Bit(requestId) && IsUds29Bit(responseId))
-        {
-            var reqSrc = GetSource(requestId);
-            var reqTgt = GetTarget(requestId);
 
-            var resSrc = GetSource(responseId);
-            var resTgt = GetTarget(responseId);
+        var reqSrc = GetSource(requestId);
+        var reqTgt = GetTarget(requestId);
 
-            return reqSrc == resTgt && reqTgt == resSrc;
-        }
+        var resSrc = GetSource(responseId);
+        var resTgt = GetTarget(responseId);
 
-        return false;
+        return reqSrc == resTgt && reqTgt == resSrc;
     }
 
     // ============================
@@ -169,8 +179,15 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
     // ============================
     private void ExpireOldRequests(double nowMs, List<IsoTpMessage> pending, List<UdsTransaction> transactions)
     {
-        foreach (var request in pending.Where(r => nowMs - r.StartTimeMs > ResponseTimeoutMs).ToList())
+        foreach (var request in pending.ToList())
         {
+            var deadline = _extendedDeadlines.TryGetValue(request, out var ext)
+                ? ext
+                : request.StartTimeMs + DefaultTimeoutMs;
+
+            if (nowMs <= deadline)
+                continue;
+
             request.Channel ??= channelResolver.ResolveForMessage(request);
 
             transactions.Add(new UdsTransaction
@@ -181,33 +198,16 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
             });
 
             pending.Remove(request);
+            _extendedDeadlines.Remove(request);
+            _completedRequests.Add(request);
         }
     }
 
     // ============================
-    // 🧠 CAN ID HELPERS
+    // HELPERS
     // ============================
 
     private static bool IsExtended(uint id) => id > 0x7FF;
-
-    private static bool IsUds29Bit(uint id)
-    {
-        return (id & 0x1FFF0000) == 0x18DA0000 ||
-               (id & 0x1FFF0000) == 0x18DB0000;
-    }
-
-    private static bool IsNonUds(uint id)
-    {
-        return IsExtended(id) && !IsUds29Bit(id);
-    }
-
-    private static bool IsFunctional(uint id)
-    {
-        if (!IsExtended(id))
-            return id == 0x7DF;
-
-        return (id & 0x1FFF0000) == 0x18DB0000;
-    }
 
     private static byte GetSource(uint id) => (byte)((id >> 8) & 0xFF);
 

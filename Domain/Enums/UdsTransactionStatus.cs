@@ -5,6 +5,7 @@ public enum UdsTransactionStatus
     Success,
     NegativeResponse,
     Timeout,
+    ResponsePending,
     UnmatchedResponse,
     IsoTpError
 }
