@@ -83,7 +83,7 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
                     Channel = message.Channel,
                     Request = request,
                     Response = message,
-                    Status = UdsTransactionStatus.NegativeResponse
+                    Status = UdsTransactionStatus.ResponsePending
                 });
                 // keep request pending for the next response
                 continue;
@@ -128,7 +128,7 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
     private static bool IsResponsePending(IsoTpMessage message)
     {
         return message.Decoded?.IsNegativeResponse == true &&
-               message.Decoded?.ServiceId == 0x78;
+               message.Decoded?.NegativeResponseCode == 0x78;
     }
 
     // ============================
@@ -148,7 +148,7 @@ public sealed class TransactionMatcher(IEcuChannelResolver channelResolver) : IT
              .Where(req =>
                 responseOriginalSid is null ||
                 req.Decoded?.ServiceId == responseOriginalSid)
-             .OrderBy(req => req.StartTimeMs)
+             .OrderByDescending(req => req.StartTimeMs)
              .FirstOrDefault();
     }
 
