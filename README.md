@@ -10,6 +10,8 @@ Production-oriented WPF desktop analyzer for PCAN `.trc` logs containing UDS ove
 - Validates ISO-TP sequence numbers and expected multi-frame payload length.
 - Supports physical channels such as `7E0 <-> 7E8` and functional requests such as `7DF -> ECU response`.
 - Decodes UDS service IDs, positive responses, negative responses, NRC meaning, and suggested action.
+- Decodes the common ISO 14229-1 diagnostic service catalog, including sub-functions, service purpose, request/response type, and parameter summaries.
+- Interprets standardized NRCs with category and suggested action, while classifying reserved and OEM-specific NRC ranges instead of dropping them as unknown.
 - Matches request/response transactions by ECU channel, timing window, and service relationship.
 - Detects timeouts, retries, negative responses, ISO-TP errors, and simple session-precondition issues.
 - Uses a rule-engine pattern so new diagnostic insights can be added without changing parser or UI code.
@@ -44,6 +46,7 @@ EvUdsAnalyzer
 - `IsoTpReassembler`: stream-safe ISO-TP reassembly and validation engine.
 - `EcuChannelResolver`: physical and functional ECU channel mapping.
 - `UdsDecoder`: UDS SID, positive response, negative response, and NRC decoding.
+- `UdsServiceCatalog`: ISO 14229 service/sub-function metadata plus reserved/OEM range classification.
 - `TransactionMatcher`: request/response pairing with service and timing checks.
 - `DiagnosticAnalyzer`: runs pluggable `IDiagnosticRule` implementations.
 - `ExplanationService`: converts protocol issues and transactions into plain-English summaries, likely causes, evidence, and action checklists.
@@ -54,9 +57,11 @@ EvUdsAnalyzer
 
 Add new diagnostic rules by implementing `IDiagnosticRule` and registering the rule in `CompositionRoot`.
 
-Add UDS services by extending the service-name dictionary in `UdsDecoder`.
+Add UDS services or sub-functions by extending `UdsServiceCatalog`.
 
 Add NRC details by extending `NrcInterpreter`.
+
+The decoder intentionally classifies OEM-specific and reserved ISO 14229 ranges, but exact OEM payload meanings still require the ECU supplier or OEM diagnostic specification.
 
 Future timing work such as P2/P2* can be added in `TransactionMatcher` or as a separate rule that consumes matched transactions.
 

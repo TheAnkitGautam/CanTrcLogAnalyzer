@@ -5,4 +5,4 @@ public interface INrcInterpreter
     NrcInfo Interpret(byte code);
 }
 
-public sealed record NrcInfo(string Meaning, string SuggestedAction);
+public sealed record NrcInfo(string Meaning, string SuggestedAction, string Category = "General", bool IsStandardized = true);

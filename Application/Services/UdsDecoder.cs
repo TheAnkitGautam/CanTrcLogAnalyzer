@@ -6,26 +6,6 @@ namespace EvUdsAnalyzer.Application.Services;
 
 public sealed class UdsDecoder(INrcInterpreter nrcInterpreter) : IUdsDecoder
 {
-    private static readonly IReadOnlyDictionary<byte, string> Services = new Dictionary<byte, string>
-    {
-        [0x10] = "DiagnosticSessionControl",
-        [0x11] = "ECUReset",
-        [0x14] = "ClearDiagnosticInformation",
-        [0x19] = "ReadDTCInformation",
-        [0x22] = "ReadDataByIdentifier",
-        [0x27] = "SecurityAccess",
-        [0x28] = "CommunicationControl",
-        [0x2E] = "WriteDataByIdentifier",
-        [0x2F] = "InputOutputControlByIdentifier",
-        [0x31] = "RoutineControl",
-        [0x34] = "RequestDownload",
-        [0x35] = "RequestUpload",
-        [0x36] = "TransferData",
-        [0x37] = "RequestTransferExit",
-        [0x3E] = "TesterPresent",
-        [0x85] = "ControlDTCSetting"
-    };
-
     public UdsDecodedMessage? Decode(IsoTpMessage message)
     {
         if (message.Status is IsoTpMessageStatus.FlowControl || message.Payload.Count == 0)
@@ -34,44 +14,153 @@ public sealed class UdsDecoder(INrcInterpreter nrcInterpreter) : IUdsDecoder
         }
 
         var sid = message.Payload[0];
-        if (sid == 0x7F && message.Payload.Count >= 3)
+        if (sid == 0x7F)
         {
-            var originalSid = message.Payload[1];
-            var nrc = message.Payload[2];
-            var info = nrcInterpreter.Interpret(nrc);
-            return new UdsDecodedMessage
-            {
-                ServiceId = sid,
-                OriginalServiceId = originalSid,
-                IsNegativeResponse = true,
-                NegativeResponseCode = nrc,
-                ServiceName = "NegativeResponse",
-                Description = $"Negative response to 0x{originalSid:X2} {GetServiceName(originalSid)}",
-                NrcMeaning = info.Meaning,
-                SuggestedAction = info.SuggestedAction
-            };
+            return DecodeNegativeResponse(message);
         }
 
-        if (sid >= 0x40)
+        if (IsPositiveResponse(message, sid))
         {
-            var originalSid = (byte)(sid - 0x40);
-            return new UdsDecodedMessage
-            {
-                ServiceId = sid,
-                OriginalServiceId = originalSid,
-                IsPositiveResponse = true,
-                ServiceName = $"{GetServiceName(originalSid)} positive response",
-                Description = $"Positive response to 0x{originalSid:X2}"
-            };
+            return DecodePositiveResponse(message, sid);
         }
+
+        return DecodeRequest(message, sid);
+    }
+
+    private UdsDecodedMessage DecodeNegativeResponse(IsoTpMessage message)
+    {
+        var originalSid = message.Payload.Count >= 2 ? message.Payload[1] : (byte?)null;
+        var nrc = message.Payload.Count >= 3 ? message.Payload[2] : (byte?)null;
+        var originalService = originalSid.HasValue ? UdsServiceCatalog.GetService(originalSid.Value) : null;
+        var nrcInfo = nrc.HasValue
+            ? nrcInterpreter.Interpret(nrc.Value)
+            : new NrcInfo("Malformed negative response", "A negative response must contain original SID and NRC.", "Format", false);
+
+        return new UdsDecodedMessage
+        {
+            ServiceId = 0x7F,
+            OriginalServiceId = originalSid,
+            IsNegativeResponse = true,
+            NegativeResponseCode = nrc,
+            ServiceName = "NegativeResponse",
+            ServiceLongName = "Negative Response",
+            ServiceCategory = "Response",
+            ServicePurpose = "The ECU rejected a diagnostic request and returned a reason code.",
+            MessageKind = "Negative response",
+            Description = originalSid.HasValue
+                ? $"Negative response to 0x{originalSid.Value:X2} {originalService?.Name ?? "UnknownService"}: {nrcInfo.Meaning}"
+                : $"Malformed negative response: {nrcInfo.Meaning}",
+            NrcMeaning = nrcInfo.Meaning,
+            NrcCategory = nrcInfo.Category,
+            SuggestedAction = nrcInfo.SuggestedAction,
+            ParameterSummary = message.Payload.Count >= 3
+                ? $"Original SID: 0x{originalSid!.Value:X2}; NRC: 0x{nrc!.Value:X2} ({nrcInfo.Meaning})"
+                : "Malformed negative response payload"
+        };
+    }
+
+    private static UdsDecodedMessage DecodePositiveResponse(IsoTpMessage message, byte sid)
+    {
+        var originalSid = (byte)(sid - 0x40);
+        var service = UdsServiceCatalog.GetService(originalSid);
+        var subFunction = TryGetPositiveResponseSubFunction(originalSid, message.Payload);
+        var subFunctionInfo = subFunction.HasValue
+            ? UdsServiceCatalog.GetSubFunction(originalSid, subFunction.Value)
+            : null;
 
         return new UdsDecodedMessage
         {
             ServiceId = sid,
-            ServiceName = GetServiceName(sid),
-            Description = "UDS request"
+            OriginalServiceId = originalSid,
+            SubFunction = subFunction,
+            IsPositiveResponse = true,
+            ServiceName = $"{service.Name}PositiveResponse",
+            ServiceLongName = $"{service.LongName} positive response",
+            ServiceCategory = service.Category,
+            ServicePurpose = service.Purpose,
+            MessageKind = "Positive response",
+            SubFunctionName = subFunctionInfo?.Name ?? "",
+            SubFunctionMeaning = subFunctionInfo?.Meaning ?? "",
+            Description = $"Positive response to 0x{originalSid:X2} {service.Name}",
+            ParameterSummary = UdsServiceCatalog.BuildParameterSummary(originalSid, message.Payload, isResponse: true)
         };
     }
 
-    private static string GetServiceName(byte sid) => Services.TryGetValue(sid, out var name) ? name : "UnknownService";
+    private static UdsDecodedMessage DecodeRequest(IsoTpMessage message, byte sid)
+    {
+        var service = UdsServiceCatalog.GetService(sid);
+        var subFunction = TryGetRequestSubFunction(sid, message.Payload);
+        var subFunctionInfo = subFunction.HasValue
+            ? UdsServiceCatalog.GetSubFunction(sid, subFunction.Value)
+            : null;
+        var suppressPositiveResponse = message.Payload.Count >= 2 && (message.Payload[1] & 0x80) != 0;
+
+        return new UdsDecodedMessage
+        {
+            ServiceId = sid,
+            SubFunction = subFunction,
+            ServiceName = service.Name,
+            ServiceLongName = service.LongName,
+            ServiceCategory = service.Category,
+            ServicePurpose = service.Purpose,
+            MessageKind = service.IsStandardized ? "Request" : service.Category,
+            SubFunctionName = subFunctionInfo?.Name ?? BuildGenericSubFunctionName(subFunction),
+            SubFunctionMeaning = subFunctionInfo?.Meaning ?? "",
+            Description = BuildRequestDescription(service, subFunctionInfo, suppressPositiveResponse),
+            ParameterSummary = UdsServiceCatalog.BuildParameterSummary(sid, message.Payload, isResponse: false)
+        };
+    }
+
+    private static bool IsPositiveResponse(IsoTpMessage message, byte sid)
+    {
+        if (sid < 0x40)
+        {
+            return false;
+        }
+
+        var originalSid = (byte)(sid - 0x40);
+        return message.IsRx && UdsServiceCatalog.IsKnownRequestService(originalSid);
+    }
+
+    private static byte? TryGetRequestSubFunction(byte sid, IReadOnlyList<byte> payload)
+    {
+        if (payload.Count < 2 || !ServiceUsuallyHasSubFunction(sid))
+        {
+            return null;
+        }
+
+        return (byte)(payload[1] & 0x7F);
+    }
+
+    private static byte? TryGetPositiveResponseSubFunction(byte originalSid, IReadOnlyList<byte> payload)
+    {
+        if (payload.Count < 2 || !ServiceUsuallyHasSubFunction(originalSid))
+        {
+            return null;
+        }
+
+        return (byte)(payload[1] & 0x7F);
+    }
+
+    private static bool ServiceUsuallyHasSubFunction(byte sid) =>
+        sid is 0x10 or 0x11 or 0x19 or 0x27 or 0x28 or 0x29 or 0x2A or 0x2C or 0x31 or 0x38 or 0x3E or 0x83 or 0x85 or 0x86 or 0x87;
+
+    private static string BuildRequestDescription(UdsServiceInfo service, UdsSubFunctionInfo? subFunction, bool suppressPositiveResponse)
+    {
+        var description = $"0x{service.ServiceId:X2} {service.LongName}: {service.Purpose}";
+        if (subFunction is not null)
+        {
+            description += $" Sub-function 0x{subFunction.SubFunction:X2} {subFunction.Name}: {subFunction.Meaning}";
+        }
+
+        if (suppressPositiveResponse)
+        {
+            description += " Suppress positive response bit is set.";
+        }
+
+        return description;
+    }
+
+    private static string BuildGenericSubFunctionName(byte? subFunction) =>
+        subFunction.HasValue ? $"SubFunction0x{subFunction.Value:X2}" : "";
 }

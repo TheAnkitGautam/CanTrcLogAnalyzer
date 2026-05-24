@@ -64,8 +64,13 @@ public sealed class ReportExportService : IReportExportService
 
     public Task ExportTransactionsCsvAsync(string filePath, IReadOnlyList<UdsTransaction> transactions, CancellationToken cancellationToken)
     {
-        var lines = new List<string> { "Status,Channel,TimeMs,LatencyMs,Service,Request,Response,PlainMeaning,LikelyCause,RecommendedActions" };
-        lines.AddRange(transactions.Select(t => string.Join(",", Csv(t.StatusDisplay), Csv(t.Channel.DisplayName), t.StartTimeMs.ToString("F3", CultureInfo.InvariantCulture), t.LatencyMs?.ToString("F3", CultureInfo.InvariantCulture) ?? "", Csv(t.ServiceDisplay), Csv(t.RequestDisplay), Csv(t.ResponseDisplay), Csv(t.UserFriendlySummary), Csv(t.LikelyCause), Csv(string.Join(" | ", t.RecommendedActions)))));
+        var lines = new List<string> { "Status,Channel,TimeMs,LatencyMs,Service,Category,Purpose,Parameters,NRC,NrcCategory,Request,Response,PlainMeaning,LikelyCause,RecommendedActions" };
+        lines.AddRange(transactions.Select(t =>
+        {
+            var decoded = t.Request?.Decoded ?? t.Response?.Decoded;
+            var nrc = t.Response?.Decoded?.NegativeResponseCode;
+            return string.Join(",", Csv(t.StatusDisplay), Csv(t.Channel.DisplayName), t.StartTimeMs.ToString("F3", CultureInfo.InvariantCulture), t.LatencyMs?.ToString("F3", CultureInfo.InvariantCulture) ?? "", Csv(t.ServiceDisplay), Csv(decoded?.ServiceCategory ?? ""), Csv(decoded?.ServicePurpose ?? ""), Csv(decoded?.ParameterSummary ?? ""), Csv(nrc.HasValue ? $"0x{nrc.Value:X2} {t.Response?.Decoded?.NrcMeaning}" : ""), Csv(t.Response?.Decoded?.NrcCategory ?? ""), Csv(t.RequestDisplay), Csv(t.ResponseDisplay), Csv(t.UserFriendlySummary), Csv(t.LikelyCause), Csv(string.Join(" | ", t.RecommendedActions)));
+        }));
         return System.IO.File.WriteAllLinesAsync(filePath, lines, Encoding.UTF8, cancellationToken);
     }
 

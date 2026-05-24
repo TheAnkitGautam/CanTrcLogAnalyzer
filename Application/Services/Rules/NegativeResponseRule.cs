@@ -15,7 +15,7 @@ public sealed class NegativeResponseRule : IDiagnosticRule
             yield return new DiagnosticIssue
             {
                 Title = $"Negative response NRC 0x{nrc:X2}",
-                Description = $"{decoded.NrcMeaning}. Suggested action: {decoded.SuggestedAction}",
+                Description = $"{decoded.NrcMeaning} ({decoded.NrcCategory}). Suggested action: {decoded.SuggestedAction}",
                 Severity = nrc is 0x33 or 0x35 or 0x36 ? IssueSeverity.Error : IssueSeverity.Warning,
                 LineNumber = transaction.Response.LineNumberOrStart(),
                 TimestampMs = transaction.Response.StartTimeMs,

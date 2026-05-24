@@ -7,477 +7,420 @@
         Title="EV UDS TRC Log Analyzer"
         Height="820"
         Width="1280"
-        MinHeight="640"
-        MinWidth="980"
+        MinHeight="680"
+        MinWidth="1040"
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppTextBrush}">
 
-	<Window.Resources>
-		<Style TargetType="DataGridColumnHeader">
-			<Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
-			<Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-			<Setter Property="BorderThickness" Value="{DynamicResource AppBorderThickness}"/>
-			<Setter Property="BorderThickness" Value="0,0,0,1"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="Padding" Value="8,6"/>
-		</Style>
-	</Window.Resources>
+    <Window.Resources>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+    </Window.Resources>
 
-	<DockPanel>
-		<Border DockPanel.Dock="Top" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="14">
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="Auto"/>
-				</Grid.ColumnDefinitions>
-				<Button Command="{Binding LoadFileCommand}" Padding="14,8" FontWeight="SemiBold">
-					<StackPanel Orientation="Horizontal">
-						<TextBlock Text="&#xE8E5;" Style="{StaticResource IconText}"/>
-						<TextBlock Text="Load .trc"/>
-					</StackPanel>
-				</Button>
-				<StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-					<TextBlock Text="{Binding FileName}" Foreground="{DynamicResource AppTextBrush}" FontSize="17" FontWeight="SemiBold"/>
-					<TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AppMutedTextBrush}" Margin="0,3,0,0"/>
-				</StackPanel>
-				<StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-					<StackPanel Width="115" Margin="0,0,10,0">
-						<TextBlock Text="Theme" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}"/>
-					</StackPanel>
-					<Button Command="{Binding ExportHtmlCommand}" Padding="10,6" Margin="0,12,8,0">
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xEDE1;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="HTML"/>
-						</StackPanel>
-					</Button>
-					<Button Command="{Binding ExportIssuesCsvCommand}" Padding="10,6" Margin="0,12,8,0">
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Issues"/>
-						</StackPanel>
-					</Button>
-					<Button Command="{Binding ExportTransactionsCsvCommand}" Padding="10,6" Margin="0,12,14,0">
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Transactions"/>
-						</StackPanel>
-					</Button>
-					<TextBlock VerticalAlignment="Center" Foreground="{DynamicResource AppDangerBrush}" FontWeight="SemiBold" Text="{Binding Summary.TotalErrors, StringFormat=Errors: {0}}"/>
-				</StackPanel>
-			</Grid>
-		</Border>
+    <DockPanel>
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource AppSurfaceBrush}"
+                BorderBrush="{DynamicResource AppBorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-		<DockPanel Margin="14">
-			<Border DockPanel.Dock="Top" Style="{StaticResource PanelBorder}" Padding="12" Margin="0,0,0,10">
-				<WrapPanel VerticalAlignment="Center">
-					<StackPanel Width="260" Margin="0,0,12,0">
-						<TextBlock Text="Search" Style="{StaticResource SmallLabel}"/>
-						<TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Search CAN IDs, channels, services, payloads, issue text, and explanations."/>
-					</StackPanel>
-					<StackPanel Width="130" Margin="0,0,12,0">
-						<TextBlock Text="Severity" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding SeverityOptions}" SelectedItem="{Binding SeverityFilter}"/>
-					</StackPanel>
-					<StackPanel Width="185" Margin="0,0,12,0">
-						<TextBlock Text="ECU/channel" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding ChannelOptions}" SelectedItem="{Binding ChannelFilter}"/>
-					</StackPanel>
-					<StackPanel Width="210" Margin="0,0,12,0">
-						<TextBlock Text="Service" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding ServiceOptions}" SelectedItem="{Binding ServiceFilter}"/>
-					</StackPanel>
-					<StackPanel Width="150" Margin="0,0,12,0">
-						<TextBlock Text="Status" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}"/>
-					</StackPanel>
-					<StackPanel Width="150" Margin="0,0,12,0">
-						<TextBlock Text="Message type" Style="{StaticResource SmallLabel}"/>
-						<ComboBox ItemsSource="{Binding MessageTypeOptions}" SelectedItem="{Binding MessageTypeFilter}"/>
-					</StackPanel>
-					<Button Command="{Binding ClearFiltersCommand}" Padding="12,6" Margin="0,16,0,0">
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE894;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Clear filters"/>
-						</StackPanel>
-					</Button>
-				</WrapPanel>
-			</Border>
+                <Button Command="{Binding LoadFileCommand}" Padding="14,8" FontWeight="SemiBold">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8E5;" Style="{StaticResource IconText}"/>
+                        <TextBlock Text="Load"/>
+                    </StackPanel>
+                </Button>
 
-			<TabControl SelectedIndex="{Binding SelectedTabIndex}">
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE9D2;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Dashboard"/>
-						</StackPanel>
-					</TabItem.Header>
-					<ScrollViewer VerticalScrollBarVisibility="Auto">
-						<StackPanel Margin="4">
-							<Border Style="{StaticResource PanelBorder}" Background="{DynamicResource AppSurfaceBrush}">
-								<Grid>
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="2*"/>
-										<ColumnDefinition Width="*"/>
-									</Grid.ColumnDefinitions>
-									<StackPanel>
-										<TextBlock Text="{Binding Dashboard.VerdictDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource AppSuccessBrush}"/>
-										<TextBlock Text="{Binding Dashboard.Headline}" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
-										<TextBlock Text="{Binding Dashboard.PlainSummary}" FontSize="14" TextWrapping="Wrap" Margin="0,8,0,0"/>
-									</StackPanel>
-									<UniformGrid Grid.Column="1" Columns="2">
-										<StackPanel Margin="8">
-											<TextBlock Text="Timeouts" Style="{StaticResource SmallLabel}"/>
-											<TextBlock Text="{Binding Dashboard.TimeoutCount}" FontSize="24" FontWeight="SemiBold"/>
-										</StackPanel>
-										<StackPanel Margin="8">
-											<TextBlock Text="NRCs" Style="{StaticResource SmallLabel}"/>
-											<TextBlock Text="{Binding Dashboard.NegativeResponseCount}" FontSize="24" FontWeight="SemiBold"/>
-										</StackPanel>
-										<StackPanel Margin="8">
-											<TextBlock Text="Retries" Style="{StaticResource SmallLabel}"/>
-											<TextBlock Text="{Binding Dashboard.RetryPatternCount}" FontSize="24" FontWeight="SemiBold"/>
-										</StackPanel>
-										<StackPanel Margin="8">
-											<TextBlock Text="ISO-TP errors" Style="{StaticResource SmallLabel}"/>
-											<TextBlock Text="{Binding Dashboard.IsoTpErrorCount}" FontSize="24" FontWeight="SemiBold"/>
-										</StackPanel>
-									</UniformGrid>
-								</Grid>
-							</Border>
+                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding FileName}" FontSize="17" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AppMutedTextBrush}" Margin="0,3,0,0"/>
+                </StackPanel>
 
-							<TextBlock Text="Top Findings" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,8"/>
-							<ItemsControl ItemsSource="{Binding TopFindings}">
-								<ItemsControl.ItemTemplate>
-									<DataTemplate>
-										<Border Style="{StaticResource PanelBorder}">
-											<StackPanel>
-												<DockPanel>
-													<TextBlock DockPanel.Dock="Right" Text="{Binding Severity}" FontWeight="SemiBold"/>
-													<TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
-												</DockPanel>
-												<TextBlock Text="{Binding PlainMeaning}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-												<TextBlock Text="{Binding LikelyCause, StringFormat=Likely cause: {0}}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-												<TextBlock Text="{Binding PrimaryAction, StringFormat=Next action: {0}}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"/>
-												<Expander Header="Evidence and technical details" Margin="0,8,0,0">
-													<StackPanel>
-														<TextBlock Text="{Binding Evidence}" TextWrapping="Wrap"/>
-														<TextBlock Text="{Binding WhyDetected}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-														<TextBlock Text="{Binding TechnicalDetails}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-													</StackPanel>
-												</Expander>
-											</StackPanel>
-										</Border>
-									</DataTemplate>
-								</ItemsControl.ItemTemplate>
-							</ItemsControl>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Width="112" Margin="0,0,10,0">
+                        <TextBlock Text="Theme" Style="{StaticResource SmallLabel}"/>
+                        <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}"/>
+                    </StackPanel>
+                    <Button Command="{Binding ExportHtmlCommand}" Padding="10,6" Margin="0,12,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEDE1;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Report"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ExportIssuesCsvCommand}" Padding="10,6" Margin="0,12,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Issues CSV"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ExportTransactionsCsvCommand}" Padding="10,6" Margin="0,12,14,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Tx CSV"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock VerticalAlignment="Center"
+                               Foreground="{DynamicResource AppDangerBrush}"
+                               FontWeight="SemiBold"
+                               Text="{Binding Summary.TotalErrors, StringFormat=Errors: {0}}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-							<TextBlock Text="ECU / Channel Health" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,8"/>
-							<ItemsControl ItemsSource="{Binding EcuHealthCards}">
-								<ItemsControl.ItemsPanel>
-									<ItemsPanelTemplate>
-										<WrapPanel/>
-									</ItemsPanelTemplate>
-								</ItemsControl.ItemsPanel>
-								<ItemsControl.ItemTemplate>
-									<DataTemplate>
-										<Border Style="{StaticResource PanelBorder}" Width="360">
-											<StackPanel>
-												<TextBlock Text="{Binding Channel}" FontSize="16" FontWeight="SemiBold"/>
-												<TextBlock Text="{Binding VerdictDisplay}" Foreground="{DynamicResource AppSuccessBrush}" FontWeight="SemiBold" Margin="0,4,0,0"/>
-												<TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-												<TextBlock Text="{Binding Transactions, StringFormat=Transactions: {0}}" Margin="0,8,0,0"/>
-												<TextBlock Text="{Binding Issues, StringFormat=Issues: {0}}"/>
-											</StackPanel>
-										</Border>
-									</DataTemplate>
-								</ItemsControl.ItemTemplate>
-							</ItemsControl>
-						</StackPanel>
-					</ScrollViewer>
-				</TabItem>
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE9D5;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Log Viewer"/>
-						</StackPanel>
-					</TabItem.Header>
-					<DataGrid x:Name="FramesGrid" ItemsSource="{Binding FilteredFrames}" SelectedItem="{Binding SelectedFrame}" SelectionMode="Single" RowBackground="{DynamicResource AppSurfaceBrush}" AlternatingRowBackground="{x:Null}">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" Width="70"/>
-							<DataGridTextColumn Header="Time (ms)" Binding="{Binding TimestampMs, StringFormat=F3}" Width="105"/>
-							<DataGridTextColumn Header="Bus" Binding="{Binding BusDisplay}" Width="60"/>
-							<DataGridTextColumn Header="CAN ID" Binding="{Binding CanId}" Width="100"/>
-							<DataGridTextColumn Header="Dir" Binding="{Binding Direction}" Width="55"/>
-							<DataGridTextColumn Header="Type" Binding="{Binding IsoTpFrameTypeDisplay}" Width="65"/>
-							<DataGridTemplateColumn Header="Data" Width="2*">
-								<DataGridTemplateColumn.CellTemplate>
-									<DataTemplate>
-										<TextBlock Text="{Binding DataHex}" Style="{StaticResource WrappingCellText}"/>
-									</DataTemplate>
-								</DataGridTemplateColumn.CellTemplate>
-							</DataGridTemplateColumn>
-						</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
+        <DockPanel Margin="14">
+            <Border DockPanel.Dock="Top" Style="{StaticResource PanelBorder}" Padding="12" Margin="0,0,0,10">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Left" Width="320" Margin="0,0,12,0">
+                        <TextBlock Text="Search" Style="{StaticResource SmallLabel}"/>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Search CAN IDs, channels, services, payloads, issue text, and decoded meanings."/>
+                    </StackPanel>
+                    <Button DockPanel.Dock="Right" Command="{Binding ClearFiltersCommand}" Padding="12,6" Margin="12,16,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE894;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Reset"/>
+                        </StackPanel>
+                    </Button>
+                    <UniformGrid Columns="5">
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Severity" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox ItemsSource="{Binding SeverityOptions}" SelectedItem="{Binding SeverityFilter}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="ECU/channel" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox ItemsSource="{Binding ChannelOptions}" SelectedItem="{Binding ChannelFilter}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Service" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox ItemsSource="{Binding ServiceOptions}" SelectedItem="{Binding ServiceFilter}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Status" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Message type" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox ItemsSource="{Binding MessageTypeOptions}" SelectedItem="{Binding MessageTypeFilter}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </DockPanel>
+            </Border>
 
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE8F1;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Messages"/>
-						</StackPanel>
-					</TabItem.Header>
-					<DataGrid x:Name="MessagesGrid" ItemsSource="{Binding FilteredMessages}" SelectedItem="{Binding SelectedMessage}" RowBackground="{DynamicResource AppSurfaceBrush}" AlternatingRowBackground="{x:Null}">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="Start (ms)" Binding="{Binding StartTimeMs, StringFormat=F3}" Width="110"/>
-							<DataGridTextColumn Header="End (ms)" Binding="{Binding EndTimeMs, StringFormat=F3}" Width="110"/>
-							<DataGridTextColumn Header="Channel" Binding="{Binding ChannelDisplay}" Width="145"/>
-							<DataGridTextColumn Header="CAN ID" Binding="{Binding CanId}" Width="90"/>
-							<DataGridTextColumn Header="Dir" Binding="{Binding Direction}" Width="60"/>
-							<DataGridTextColumn Header="ISO-TP" Binding="{Binding FrameType}" Width="90"/>
-							<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-							<DataGridTextColumn Header="Service" Binding="{Binding ServiceDisplay}" Width="190"/>
-							<DataGridTemplateColumn Header="Payload" Width="2*">
-								<DataGridTemplateColumn.CellTemplate>
-									<DataTemplate>
-										<TextBlock Text="{Binding PayloadHex}" Style="{StaticResource WrappingCellText}"/>
-									</DataTemplate>
-								</DataGridTemplateColumn.CellTemplate>
-							</DataGridTemplateColumn>
-						</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE9D2;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Overview"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Transactions"/>
-						</StackPanel>
-					</TabItem.Header>
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="3*"/>
-							<ColumnDefinition Width="2*"/>
-						</Grid.ColumnDefinitions>
-						<DataGrid x:Name="TransactionsGrid" ItemsSource="{Binding FilteredTransactions}" SelectedItem="{Binding SelectedTransaction}" RowBackground="{DynamicResource AppSurfaceBrush}" AlternatingRowBackground="{x:Null}">
-							<DataGrid.Columns>
-								<DataGridTextColumn Header="Time (ms)" Binding="{Binding StartTimeMs, StringFormat=F3}" Width="110"/>
-								<DataGridTextColumn Header="Channel" Binding="{Binding Channel.DisplayName}" Width="150"/>
-								<DataGridTextColumn Header="Service" Binding="{Binding ServiceDisplay}" Width="185"/>
-								<DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="125"/>
-								<DataGridTextColumn Header="Latency" Binding="{Binding LatencyMs, StringFormat=F3}" Width="85"/>
-								<DataGridTemplateColumn Header="Request" Width="2*">
-									<DataGridTemplateColumn.CellTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding RequestDisplay}" Style="{StaticResource WrappingCellText}"/>
-										</DataTemplate>
-									</DataGridTemplateColumn.CellTemplate>
-								</DataGridTemplateColumn>
-								<DataGridTemplateColumn Header="Response" Width="2*">
-									<DataGridTemplateColumn.CellTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding ResponseDisplay}" Style="{StaticResource WrappingCellText}"/>
-										</DataTemplate>
-									</DataGridTemplateColumn.CellTemplate>
-								</DataGridTemplateColumn>
-							</DataGrid.Columns>
-						</DataGrid>
-						<Border Grid.Column="1" Background="{DynamicResource AppSurfaceBrush}" Padding="18" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1,0,0,0">
-							<ScrollViewer VerticalScrollBarVisibility="Auto">
-								<StackPanel>
-									<TextBlock Text="{Binding SelectedTransaction.UserFriendlySummary}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
-									<TextBlock Text="{Binding SelectedTransaction.LikelyCause, StringFormat=Likely cause: {0}}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-									<TextBlock Text="{Binding SelectedTransaction.WhyDetected}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-									<TextBlock Text="Recommended actions" FontWeight="SemiBold" Margin="0,16,0,4"/>
-									<TextBlock Text="{Binding SelectedTransaction.RecommendedActionsDisplay}" TextWrapping="Wrap"/>
-									<Expander Header="Evidence and technical details" Margin="0,14,0,0">
-										<StackPanel>
-											<TextBlock Text="{Binding SelectedTransaction.Evidence}" TextWrapping="Wrap"/>
-											<TextBlock Text="{Binding SelectedTransaction.TechnicalDetails}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-										</StackPanel>
-									</Expander>
-								</StackPanel>
-							</ScrollViewer>
-						</Border>
-					</Grid>
-				</TabItem>
+                            <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="3*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Dashboard.VerdictDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource AppSuccessBrush}"/>
+                                        <TextBlock Text="{Binding Dashboard.Headline}" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding Dashboard.PlainSummary}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                    <UniformGrid Grid.Column="1" Columns="4" Margin="18,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="Frames" Style="{StaticResource SmallLabel}"/>
+                                            <TextBlock Text="{Binding Dashboard.TotalFrames}" FontSize="24" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="Transactions" Style="{StaticResource SmallLabel}"/>
+                                            <TextBlock Text="{Binding Dashboard.TotalTransactions}" FontSize="24" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="NRCs" Style="{StaticResource SmallLabel}"/>
+                                            <TextBlock Text="{Binding Dashboard.NegativeResponseCount}" FontSize="24" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="ISO-TP errors" Style="{StaticResource SmallLabel}"/>
+                                            <TextBlock Text="{Binding Dashboard.IsoTpErrorCount}" FontSize="24" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                </Grid>
+                            </Border>
 
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Issues"/>
-						</StackPanel>
-					</TabItem.Header>
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="2*"/>
-							<ColumnDefinition Width="3*"/>
-						</Grid.ColumnDefinitions>
-						<DataGrid ItemsSource="{Binding FilteredIssues}" SelectedItem="{Binding SelectedIssue}" SelectionMode="Single" RowBackground="{DynamicResource AppSurfaceBrush}" AlternatingRowBackground="{x:Null}">
-							<DataGrid.Columns>
-								<DataGridTextColumn Header="Severity" Binding="{Binding SeverityDisplay}" Width="90"/>
-								<DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" Width="70"/>
-								<DataGridTextColumn Header="Channel" Binding="{Binding Channel}" Width="150"/>
-								<DataGridTemplateColumn Header="Title" Width="*">
-									<DataGridTemplateColumn.CellTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding Title}" Style="{StaticResource WrappingCellText}"/>
-										</DataTemplate>
-									</DataGridTemplateColumn.CellTemplate>
-								</DataGridTemplateColumn>
-							</DataGrid.Columns>
-						</DataGrid>
-						<Border Grid.Column="1" Background="{DynamicResource AppSurfaceBrush}" Padding="18" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1,0,0,0">
-							<ScrollViewer VerticalScrollBarVisibility="Auto">
-								<StackPanel>
-									<TextBlock Text="{Binding SelectedIssue.Title}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
-									<WrapPanel Margin="0,10,0,0">
-										<TextBlock Text="{Binding SelectedIssue.SeverityDisplay}" Foreground="{DynamicResource AppDangerBrush}" FontWeight="SemiBold" Margin="0,0,16,0"/>
-										<TextBlock Text="{Binding SelectedIssuePrimaryEvidence}" Foreground="{DynamicResource AppMutedTextBrush}"/>
-									</WrapPanel>
-									<Border Style="{StaticResource PanelBorder}" Margin="0,14,0,10">
-										<StackPanel>
-											<TextBlock Text="What this means" FontWeight="SemiBold"/>
-											<TextBlock Margin="0,6,0,0" Text="{Binding SelectedIssue.UserFriendlySummary}" TextWrapping="Wrap" FontSize="14"/>
-											<TextBlock Margin="0,10,0,0" Text="{Binding SelectedIssue.LikelyCause, StringFormat=Likely cause: {0}}" TextWrapping="Wrap"/>
-										</StackPanel>
-									</Border>
-									<Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
-										<StackPanel>
-											<TextBlock Text="Root-cause path" FontWeight="SemiBold"/>
-											<TextBlock Text="{Binding SelectedIssueRootCauseMap}" TextWrapping="Wrap" FontFamily="Consolas" Margin="0,8,0,0"/>
-										</StackPanel>
-									</Border>
-									<TextBlock Margin="0,4,0,4" Text="Recommended actions" FontWeight="SemiBold"/>
-									<TextBlock Text="{Binding SelectedIssue.RecommendedActionsDisplay}" TextWrapping="Wrap"/>
-									<WrapPanel Margin="0,14,0,0">
-										<Button Command="{Binding NavigateToIssueFrameCommand}" Padding="10,6" Margin="0,0,8,8">
-											<StackPanel Orientation="Horizontal">
-												<TextBlock Text="&#xE8A5;" Style="{StaticResource IconText}"/>
-												<TextBlock Text="Open raw frame"/>
-											</StackPanel>
-										</Button>
-										<Button Command="{Binding NavigateToIssueMessageCommand}" Padding="10,6" Margin="0,0,8,8">
-											<StackPanel Orientation="Horizontal">
-												<TextBlock Text="&#xE8F1;" Style="{StaticResource IconText}"/>
-												<TextBlock Text="Open message"/>
-											</StackPanel>
-										</Button>
-										<Button Command="{Binding NavigateToIssueTransactionCommand}" Padding="10,6" Margin="0,0,8,8">
-											<StackPanel Orientation="Horizontal">
-												<TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}"/>
-												<TextBlock Text="Open transaction"/>
-											</StackPanel>
-										</Button>
-									</WrapPanel>
-									<Expander Header="Evidence and technical details" Margin="0,14,0,0" IsExpanded="True">
-										<StackPanel>
-											<TextBlock Text="{Binding SelectedIssue.Evidence}" TextWrapping="Wrap"/>
-											<TextBlock Text="{Binding SelectedIssue.WhyDetected}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-											<TextBlock Text="{Binding SelectedIssue.TechnicalDetails}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-										</StackPanel>
-									</Expander>
-								</StackPanel>
-							</ScrollViewer>
-						</Border>
-					</Grid>
-				</TabItem>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
 
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE9F9;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Summary"/>
-						</StackPanel>
-					</TabItem.Header>
-					<Grid Background="{DynamicResource AppSurfaceBrush}">
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="*"/>
-						</Grid.RowDefinitions>
-						<UniformGrid Columns="4" Margin="18">
-							<Border Background="{DynamicResource AppSurfaceAltBrush}" Padding="16" Margin="0,0,10,0" CornerRadius="8">
-								<StackPanel>
-									<TextBlock Text="Total Frames" Foreground="{DynamicResource AppMutedTextBrush}"/>
-									<TextBlock Text="{Binding Summary.TotalFrames}" FontSize="28" FontWeight="SemiBold"/>
-								</StackPanel>
-							</Border>
-							<Border Background="{DynamicResource AppSurfaceAltBrush}" Padding="16" Margin="0,0,10,0" CornerRadius="8">
-								<StackPanel>
-									<TextBlock Text="ISO-TP Messages" Foreground="{DynamicResource AppMutedTextBrush}"/>
-									<TextBlock Text="{Binding Summary.TotalMessages}" FontSize="28" FontWeight="SemiBold"/>
-								</StackPanel>
-							</Border>
-							<Border Background="{DynamicResource AppSurfaceAltBrush}" Padding="16" Margin="0,0,10,0" CornerRadius="8">
-								<StackPanel>
-									<TextBlock Text="Transactions" Foreground="{DynamicResource AppMutedTextBrush}"/>
-									<TextBlock Text="{Binding Summary.TotalTransactions}" FontSize="28" FontWeight="SemiBold"/>
-								</StackPanel>
-							</Border>
-							<Border Background="{DynamicResource AppSurfaceAltBrush}" Padding="16" CornerRadius="8">
-								<StackPanel>
-									<TextBlock Text="Errors" Foreground="{DynamicResource AppMutedTextBrush}"/>
-									<TextBlock Text="{Binding Summary.TotalErrors}" FontSize="28" FontWeight="SemiBold"/>
-								</StackPanel>
-							</Border>
-						</UniformGrid>
+                                <Border Grid.Column="0" Style="{StaticResource PanelBorder}">
+                                    <StackPanel>
+                                        <TextBlock Text="Top Findings" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                        <ItemsControl ItemsSource="{Binding TopFindings}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                                        <StackPanel>
+                                                            <DockPanel>
+                                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Severity}" FontWeight="SemiBold"/>
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                            </DockPanel>
+                                                            <TextBlock Text="{Binding PlainMeaning}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                            <TextBlock Text="{Binding PrimaryAction, StringFormat=Next: {0}}" TextWrapping="Wrap" Foreground="{DynamicResource AppMutedTextBrush}" Margin="0,4,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
 
-						<DataGrid Grid.Row="1" ItemsSource="{Binding FilteredEcuBreakdown}" Margin="18,0,18,18" RowBackground="{DynamicResource AppSurfaceBrush}" AlternatingRowBackground="{x:Null}">
-							<DataGrid.ColumnHeaderStyle>
-								<Style TargetType="DataGridColumnHeader">
-									<Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
-									<Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
-									<Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-									<Setter Property="BorderThickness" Value="0,0,0,1"/>
-									<Setter Property="FontWeight" Value="SemiBold"/>
-									<Setter Property="Padding" Value="8,6"/>
-								</Style>
-							</DataGrid.ColumnHeaderStyle>
-							<DataGrid.Columns>
-								<DataGridTextColumn Header="ECU Channel" Binding="{Binding Channel}" Width="*"/>
-								<DataGridTextColumn Header="Frames" Binding="{Binding Frames}" Width="110"/>
-								<DataGridTextColumn Header="Messages" Binding="{Binding Messages}" Width="110"/>
-								<DataGridTextColumn Header="Transactions" Binding="{Binding Transactions}" Width="120"/>
-								<DataGridTextColumn Header="Issues" Binding="{Binding Issues}" Width="100"/>
-							</DataGrid.Columns>
-						</DataGrid>
-					</Grid>
-				</TabItem>
-				<TabItem>
-					<TabItem.Header>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE946;" Style="{StaticResource IconText}"/>
-							<TextBlock Text="Help"/>
-						</StackPanel>
-					</TabItem.Header>
-					<ScrollViewer VerticalScrollBarVisibility="Auto">
-						<StackPanel Margin="8">
-							<TextBlock Text="Glossary" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,8"/>
-							<ItemsControl ItemsSource="{Binding Glossary}">
-								<ItemsControl.ItemTemplate>
-									<DataTemplate>
-										<Border Style="{StaticResource PanelBorder}">
-											<StackPanel>
-												<TextBlock Text="{Binding Term}" FontSize="16" FontWeight="SemiBold"/>
-												<TextBlock Text="{Binding PlainMeaning}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-												<Expander Header="Technical meaning" Margin="0,8,0,0">
-													<TextBlock Text="{Binding TechnicalMeaning}" TextWrapping="Wrap"/>
-												</Expander>
-											</StackPanel>
-										</Border>
-									</DataTemplate>
-								</ItemsControl.ItemTemplate>
-							</ItemsControl>
-						</StackPanel>
-					</ScrollViewer>
-				</TabItem>
-			</TabControl>
-		</DockPanel>
-	</DockPanel>
+                                <Border Grid.Column="1" Style="{StaticResource PanelBorder}" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="ECU Health" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                        <ItemsControl ItemsSource="{Binding EcuHealthCards}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                                        <StackPanel>
+                                                            <DockPanel>
+                                                                <TextBlock DockPanel.Dock="Right" Text="{Binding VerdictDisplay}" Foreground="{DynamicResource AppSuccessBrush}" FontWeight="SemiBold"/>
+                                                                <TextBlock Text="{Binding Channel}" FontWeight="SemiBold"/>
+                                                            </DockPanel>
+                                                            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Foreground="{DynamicResource AppMutedTextBrush}" Margin="0,4,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Issues"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="3*"/>
+                        </Grid.ColumnDefinitions>
+                        <DataGrid ItemsSource="{Binding FilteredIssues}"
+                                  SelectedItem="{Binding SelectedIssue}"
+                                  SelectionMode="Single"
+                                  RowBackground="{DynamicResource AppSurfaceBrush}"
+                                  AlternatingRowBackground="{x:Null}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Severity" Binding="{Binding SeverityDisplay}" Width="90"/>
+                                <DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" Width="70"/>
+                                <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" Width="150"/>
+                                <DataGridTemplateColumn Header="Finding" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Title}" Style="{StaticResource WrappingCellText}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Border Grid.Column="1" Background="{DynamicResource AppSurfaceBrush}" Padding="18" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1,0,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SelectedIssue.Title}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <TextBlock Text="{Binding SelectedIssue.SeverityDisplay}" Foreground="{DynamicResource AppDangerBrush}" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                                        <TextBlock Text="{Binding SelectedIssuePrimaryEvidence}" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                                    </WrapPanel>
+
+                                    <Border Style="{StaticResource PanelBorder}" Margin="0,14,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="Interpretation" FontWeight="SemiBold"/>
+                                            <TextBlock Margin="0,6,0,0" Text="{Binding SelectedIssue.UserFriendlySummary}" TextWrapping="Wrap"/>
+                                            <TextBlock Margin="0,10,0,0" Text="{Binding SelectedIssue.LikelyCause, StringFormat=Likely cause: {0}}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="Evidence path" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding SelectedIssueRootCauseMap}" TextWrapping="Wrap" FontFamily="Consolas" Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Text="Recommended actions" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                                    <TextBlock Text="{Binding SelectedIssue.RecommendedActionsDisplay}" TextWrapping="Wrap"/>
+
+                                    <WrapPanel Margin="0,14,0,0">
+                                        <Button Command="{Binding NavigateToIssueFrameCommand}" Padding="10,6" Margin="0,0,8,8">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A5;" Style="{StaticResource IconText}"/><TextBlock Text="Raw frame"/></StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavigateToIssueMessageCommand}" Padding="10,6" Margin="0,0,8,8">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" Style="{StaticResource IconText}"/><TextBlock Text="Message"/></StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavigateToIssueTransactionCommand}" Padding="10,6" Margin="0,0,8,8">
+                                            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}"/><TextBlock Text="Transaction"/></StackPanel>
+                                        </Button>
+                                    </WrapPanel>
+
+                                    <Expander Header="Technical evidence" Margin="0,14,0,0" IsExpanded="True">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding SelectedIssue.Evidence}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding SelectedIssue.WhyDetected}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                            <TextBlock Text="{Binding SelectedIssue.TechnicalDetails}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Expander>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8F1;" Style="{StaticResource IconText}"/>
+                            <TextBlock Text="Evidence"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <TabControl SelectedIndex="{Binding SelectedEvidenceTabIndex}">
+                        <TabItem Header="Raw Frames">
+                            <DataGrid x:Name="FramesGrid"
+                                      ItemsSource="{Binding FilteredFrames}"
+                                      SelectedItem="{Binding SelectedFrame}"
+                                      SelectionMode="Single"
+                                      RowBackground="{DynamicResource AppSurfaceBrush}"
+                                      AlternatingRowBackground="{x:Null}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" Width="70"/>
+                                    <DataGridTextColumn Header="Time (ms)" Binding="{Binding TimestampMs, StringFormat=F3}" Width="105"/>
+                                    <DataGridTextColumn Header="Bus" Binding="{Binding BusDisplay}" Width="60"/>
+                                    <DataGridTextColumn Header="CAN ID" Binding="{Binding CanId}" Width="100"/>
+                                    <DataGridTextColumn Header="Dir" Binding="{Binding Direction}" Width="55"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding IsoTpFrameTypeDisplay}" Width="65"/>
+                                    <DataGridTemplateColumn Header="Data" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DataHex}" Style="{StaticResource WrappingCellText}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Messages">
+                            <DataGrid x:Name="MessagesGrid"
+                                      ItemsSource="{Binding FilteredMessages}"
+                                      SelectedItem="{Binding SelectedMessage}"
+                                      RowBackground="{DynamicResource AppSurfaceBrush}"
+                                      AlternatingRowBackground="{x:Null}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Start (ms)" Binding="{Binding StartTimeMs, StringFormat=F3}" Width="110"/>
+                                    <DataGridTextColumn Header="Channel" Binding="{Binding ChannelDisplay}" Width="145"/>
+                                    <DataGridTextColumn Header="CAN ID" Binding="{Binding CanId}" Width="90"/>
+                                    <DataGridTextColumn Header="Dir" Binding="{Binding Direction}" Width="60"/>
+                                    <DataGridTextColumn Header="ISO-TP" Binding="{Binding FrameType}" Width="90"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                                    <DataGridTextColumn Header="Service" Binding="{Binding ServiceDisplay}" Width="190"/>
+                                    <DataGridTemplateColumn Header="Decoded meaning" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ServiceDetailsDisplay}" Style="{StaticResource WrappingCellText}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Payload" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PayloadHex}" Style="{StaticResource WrappingCellText}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Transactions">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+                                <DataGrid x:Name="TransactionsGrid"
+                                          ItemsSource="{Binding FilteredTransactions}"
+                                          SelectedItem="{Binding SelectedTransaction}"
+                                          RowBackground="{DynamicResource AppSurfaceBrush}"
+                                          AlternatingRowBackground="{x:Null}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Time (ms)" Binding="{Binding StartTimeMs, StringFormat=F3}" Width="110"/>
+                                        <DataGridTextColumn Header="Channel" Binding="{Binding Channel.DisplayName}" Width="150"/>
+                                        <DataGridTextColumn Header="Service" Binding="{Binding ServiceDisplay}" Width="185"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="125"/>
+                                        <DataGridTextColumn Header="Latency" Binding="{Binding LatencyMs, StringFormat=F3}" Width="85"/>
+                                        <DataGridTemplateColumn Header="Request" Width="2*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding RequestDisplay}" Style="{StaticResource WrappingCellText}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Response" Width="2*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ResponseDisplay}" Style="{StaticResource WrappingCellText}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Border Grid.Column="1" Background="{DynamicResource AppSurfaceBrush}" Padding="18" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1,0,0,0">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding SelectedTransaction.UserFriendlySummary}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding SelectedTransaction.LikelyCause, StringFormat=Likely cause: {0}}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                            <TextBlock Text="Recommended actions" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                                            <TextBlock Text="{Binding SelectedTransaction.RecommendedActionsDisplay}" TextWrapping="Wrap"/>
+                                            <Expander Header="Technical details" Margin="0,14,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding SelectedTransaction.Evidence}" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding SelectedTransaction.TechnicalDetails}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                                </StackPanel>
+                                            </Expander>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </DockPanel>
 </Window>

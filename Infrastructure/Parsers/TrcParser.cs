@@ -13,6 +13,20 @@ public sealed class TrcParser : ITrcParser
         "DT", "FD", "FB", "FE", "BI", "Rx", "Tx", "D", "d"
     };
 
+
+    public static bool InferIsRxFromUdsStyle(uint canId)
+    {
+        if (canId <= 0x7FF)
+        {
+            return (canId & 0xF) >= 0x8;
+        }
+
+        byte target = (byte)((canId >> 8) & 0xFF);
+        byte source = (byte)((canId & 0xFF));
+
+        return source < target;
+    }
+
     public async Task<IReadOnlyList<CanFrame>> ParseAsync(string filePath, CancellationToken cancellationToken)
     {
         var frames = new List<CanFrame>(capacity: 4096);
@@ -220,7 +234,7 @@ public sealed class TrcParser : ITrcParser
             Bus = bus,
             CanIdValue = canIdValue,
             CanId = FormatCanId(canIdValue),
-            IsRx = direction.Equals("Rx", StringComparison.OrdinalIgnoreCase),
+            IsRx = InferIsRxFromUdsStyle(canIdValue),
             RawType = type,
             Data = data,
             IsoTpFrameType = IsoTpUtilities.GetFrameType(data)

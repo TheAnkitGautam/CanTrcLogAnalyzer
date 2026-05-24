@@ -33,6 +33,7 @@ public sealed class MainViewModel : ViewModelBase
     private string _messageTypeFilter = "All";
     private string _selectedTheme = "Dark";
     private int _selectedTabIndex;
+    private int _selectedEvidenceTabIndex;
     private IsoTpMessage? _selectedMessage;
     private UdsTransaction? _selectedIssueTransaction;
     private IsoTpMessage? _selectedIssueMessage;
@@ -108,6 +109,12 @@ public sealed class MainViewModel : ViewModelBase
     {
         get => _selectedTabIndex;
         set => SetProperty(ref _selectedTabIndex, value);
+    }
+
+    public int SelectedEvidenceTabIndex
+    {
+        get => _selectedEvidenceTabIndex;
+        set => SetProperty(ref _selectedEvidenceTabIndex, value);
     }
 
     public string SelectedTheme
@@ -484,17 +491,20 @@ public sealed class MainViewModel : ViewModelBase
 
     private void NavigateToIssueFrame()
     {
-        SelectedTabIndex = 1;
+        SelectedTabIndex = 2;
+        SelectedEvidenceTabIndex = 0;
     }
 
     private void NavigateToIssueMessage()
     {
         SelectedTabIndex = 2;
+        SelectedEvidenceTabIndex = 1;
     }
 
     private void NavigateToIssueTransaction()
     {
-        SelectedTabIndex = 3;
+        SelectedTabIndex = 2;
+        SelectedEvidenceTabIndex = 2;
     }
 
     private static void Replace<T>(ObservableCollection<T> collection, IEnumerable<T> values)

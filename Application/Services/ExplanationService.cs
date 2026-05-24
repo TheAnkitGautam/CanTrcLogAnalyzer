@@ -103,7 +103,11 @@ public sealed class ExplanationService : IExplanationService
         };
         transaction.WhyDetected = $"Transaction status is {transaction.StatusDisplay} on {transaction.Channel.DisplayName}.";
         transaction.Evidence = $"Request: {transaction.RequestDisplay}{Environment.NewLine}Response: {transaction.ResponseDisplay}";
-        transaction.TechnicalDetails = $"Service: {transaction.ServiceDisplay}; latency: {(transaction.LatencyMs?.ToString("F3") ?? "-")} ms.";
+        var decoded = transaction.Request?.Decoded ?? transaction.Response?.Decoded;
+        transaction.TechnicalDetails =
+            $"Service: {transaction.ServiceDisplay}; latency: {(transaction.LatencyMs?.ToString("F3") ?? "-")} ms." +
+            (decoded is null ? "" : $"{Environment.NewLine}Category: {decoded.ServiceCategory}.{Environment.NewLine}Purpose: {decoded.ServicePurpose}.{Environment.NewLine}Parameters: {decoded.ParameterSummary}") +
+            (transaction.Response?.Decoded?.IsNegativeResponse == true ? $"{Environment.NewLine}NRC category: {transaction.Response.Decoded.NrcCategory}; action: {transaction.Response.Decoded.SuggestedAction}" : "");
         transaction.RecommendedActions = transaction.Status switch
         {
             UdsTransactionStatus.NegativeResponse => ["Check the NRC meaning and ECU preconditions.", "Confirm session and security access before retrying.", "Validate DID/RID/sub-function values."],
