@@ -228,8 +228,8 @@
                     </TabItem.Header>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <DataGrid ItemsSource="{Binding FilteredIssues}"
                                   SelectedItem="{Binding SelectedIssue}"
@@ -371,7 +371,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="3*"/>
-                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <DataGrid x:Name="TransactionsGrid"
                                           ItemsSource="{Binding FilteredTransactions}"
